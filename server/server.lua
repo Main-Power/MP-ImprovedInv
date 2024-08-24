@@ -45,8 +45,6 @@ AddEventHandler(
       {["@steamid"] = steamid},
       function(result)
         if #result > 0 then
-          --print("result:" .. json.encode(result))
-
           -- Iterate over each row in the result
           for _, row in ipairs(result) do
             -- Check if data is not nil
@@ -62,7 +60,8 @@ AddEventHandler(
                       item_title = item.title,
                       item_weight = item.weight,
                       item_amount = item.amount,
-                      can_use = not item.usable
+                      can_use = not item.usable,
+                      slot = item.slot -- Assign the slot from the database
                     }
                   )
                 end
@@ -76,8 +75,13 @@ AddEventHandler(
 
           -- Check if items were successfully extracted
           if #items == 0 then
+            TriggerClientEvent("inventory:open", _source, items)
             return print("No inventory found for " .. steamid)
           end
+
+          -- Debugging statement to print all items
+          print("Items extracted for " .. steamid .. ": " .. json.encode(items))
+
           TriggerClientEvent("inventory:open", _source, items)
         else
           print("No inventory found for " .. steamid)
@@ -108,7 +112,8 @@ exports(
         title = itemDetails.title,
         weight = itemDetails.weight,
         usable = itemDetails.usable,
-        amount = amount
+        amount = amount,
+        slot = 1 -- Initial slot, will be updated to the next available slot
       }
 
       -- Convert itemData to JSON string
@@ -142,6 +147,21 @@ exports(
               end
 
               if not itemFound then
+                -- Find the next available slot
+                local slot = 1
+                local slotOccupied = true
+                while slotOccupied do
+                  slotOccupied = false
+                  for _, item in ipairs(inventory) do
+                    if item.slot == slot then
+                      slotOccupied = true
+                      slot = slot + 1
+                      break
+                    end
+                  end
+                end
+                itemData.slot = slot
+
                 -- Append the new item data
                 table.insert(inventory, itemData)
               end
@@ -260,4 +280,66 @@ RegisterCommand(
     end
   end,
   false
+)
+
+RegisterNetEvent(
+  "inventory:moveItem",
+  function(item, newslot)
+    local source = source
+    local steamid = GetPlayerIdentifierByType(source, "steam")
+    print("Moving item:", item, "to slot:", newslot, "for player:", steamid) -- Debugging statement
+    exports.oxmysql:execute(
+      "SELECT data FROM mp_inventory WHERE owner = @steamid",
+      {["@steamid"] = steamid},
+      function(result)
+        if #result > 0 then
+          local data = result[1].data
+          if not data or data == "" then
+            -- Initialize data as an empty JSON array
+            data = "[]"
+          end
+
+          -- Decode the existing data
+          local inventory = json.decode(data)
+          local inventoryStr = json.encode(inventory)
+          local itemFound = false
+
+          -- Check if the item exists in the inventory string
+          if string.find(inventoryStr, item) then
+            for i, invItem in ipairs(inventory) do
+              if invItem.name == item then
+                print("Item found:", item, "current slot:", invItem.slot) -- Debugging statement
+                invItem.slot = newslot
+                itemFound = true
+                break
+              end
+            end
+          end
+
+          if itemFound then
+            -- Convert the updated inventory back to JSON
+            local updatedDataJson = json.encode(inventory)
+            print("Updated inventory JSON:", updatedDataJson) -- Debugging statement
+
+            -- Update the inventory in the database
+            exports.oxmysql:execute(
+              "UPDATE mp_inventory SET data = @updatedData WHERE owner = @steamid",
+              {["@steamid"] = steamid, ["@updatedData"] = updatedDataJson},
+              function(updateResult)
+                if updateResult.affectedRows > 0 then
+                  print("Item moved in inventory for " .. steamid)
+                else
+                  print("Failed to update inventory for " .. steamid)
+                end
+              end
+            )
+          else
+            print("Item " .. item .. " not found in inventory for " .. steamid)
+          end
+        else
+          print("No inventory found for " .. steamid)
+        end
+      end
+    )
+  end
 )

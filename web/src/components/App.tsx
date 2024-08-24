@@ -11,6 +11,7 @@ debugData([
   },
 ]);
 interface Inv {
+  name: string;
   item_name: string;
   item_weight: string;
   item_amount: string;
@@ -18,20 +19,23 @@ interface Inv {
   can_use: string;
   image: string;
 }
+
 const App: React.FC = () => {
   const [showInventory, setShowInventory] = useState(true);
   const [InvTransition, setInvTransition] = useState("");
   const [inv, setInv] = React.useState<Inv[]>([
-    {
-      item_name: "item_name",
-      item_weight: "item_weight",
-      item_amount: "item_amount",
+    /*{
+      name: "bread",
+      item_name: "Bread",
+      item_weight: "0.5",
+      item_amount: "1",
       slot: 1,
-      can_use: "can_use",
-      image: "image",
-    },
+      can_use: "true",
+      image: "/images/bread.png",
+    },*/
   ]);
   const [maxSlots, setMaxSlots] = React.useState(30);
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       const { action, data } = event.data;
@@ -43,10 +47,11 @@ const App: React.FC = () => {
         const imageExtension = ".png";
         const newItems = Inv.map((item: any, index: number) => {
           const name = item.item_name;
-          const slot = index + 1;
+          const slot = item.slot || index + 1; // Use logical OR instead of bitwise OR
           const weight = item.item_weight;
           const image = `${imagePath}${name}${imageExtension}`;
           return {
+            name,
             item_name: item.item_title || "",
             item_weight: weight,
             item_amount: item.item_amount,
@@ -59,11 +64,13 @@ const App: React.FC = () => {
         setMaxSlots(data.maxSlots);
       }
     };
+
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, []);
+
   useEffect(() => {
-    console.log("Inv updated:", JSON.stringify(inv));
+    //console.log("Inv updated:", JSON.stringify(inv));
   }, [inv]);
   useEffect(() => {
     if (showInventory) {

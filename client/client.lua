@@ -22,8 +22,8 @@ RegisterCommand(
 RegisterNetEvent(
   "inventory:open",
   function(items)
-    local inventory = {}
     for _, item in ipairs(items) do
+      print("\n" .. item.item_name, item.item_title, item.item_weight, item.item_amount, item.can_use, item.slot)
       table.insert(
         inventory,
         {
@@ -31,12 +31,14 @@ RegisterNetEvent(
           item_title = item.item_title,
           item_weight = item.item_weight,
           item_amount = item.item_amount,
-          item_usable = item.can_use
+          item_usable = item.can_use,
+          slot = item.slot
         }
       )
     end
     toggleNuiFrame(true)
     SendReactMessage("showInventory", {show = true, inv = inventory, maxSlots = cfg.maxSlots})
+    inventory = {}
   end
 )
 
@@ -64,7 +66,16 @@ end
 -- NUI Callback to move an item
 RegisterNUICallback(
   "Inventory:MoveItem",
-  function(data)
-    return print(table.unpack(data))
+  function(data, cb)
+    if type(data) == "table" and data.item and data.slot then
+      local item = data.item
+      local slot = data.slot
+      print("Item: " .. tostring(item.name) .. ", Slot: " .. tostring(slot))
+      TriggerServerEvent("inventory:moveItem", item.name, slot)
+      cb("ok")
+    else
+      print("Invalid data received")
+      cb("error")
+    end
   end
 )
