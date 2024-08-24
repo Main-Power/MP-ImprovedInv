@@ -19,9 +19,18 @@ interface Inv {
   image: string;
 }
 const App: React.FC = () => {
-  const [showInventory, setShowInventory] = useState(false);
+  const [showInventory, setShowInventory] = useState(true);
   const [InvTransition, setInvTransition] = useState("");
-  const [inv, setInv] = React.useState<Inv[]>([]);
+  const [inv, setInv] = React.useState<Inv[]>([
+    {
+      item_name: "item_name",
+      item_weight: "item_weight",
+      item_amount: "item_amount",
+      slot: 1,
+      can_use: "can_use",
+      image: "image",
+    },
+  ]);
   const [maxSlots, setMaxSlots] = React.useState(30);
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

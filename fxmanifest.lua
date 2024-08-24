@@ -20,6 +20,7 @@ client_script {
 }
 
 files {
+  "public/images/*.png",
   "build/index.html",
   "build/**/*"
 }

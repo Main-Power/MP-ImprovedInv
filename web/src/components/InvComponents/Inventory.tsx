@@ -1,4 +1,5 @@
 import * as React from "react";
+import { fetchNui } from "../../utils/fetchNui";
 
 type InventoryProps = {
   Inventory: any[];
@@ -15,7 +16,6 @@ interface Inv {
 }
 
 const Inventory: React.FC<InventoryProps> = ({ Inventory, maxSlots }) => {
-  const [currentMaxSlots, setCurrentMaxSlots] = React.useState(maxSlots || 25);
   const slotsRange = Array.from({ length: maxSlots }, (_, i) => i + 1);
   const [inv, setInv] = React.useState<Inv[]>([]);
   const totalWeight = inv.reduce(
@@ -34,14 +34,13 @@ const Inventory: React.FC<InventoryProps> = ({ Inventory, maxSlots }) => {
   React.useEffect(() => {
     console.log("Inventory updated:", JSON.stringify(Inventory));
     if (Array.isArray(Inventory)) {
-      setCurrentMaxSlots(maxSlots || 25);
       setInv(Inventory);
     } else {
       console.error("Inventory is not an array");
     }
-  }, [Inventory, maxSlots]);
+  }, [Inventory]);
 
-  const handleRightClick = (event: any, item: any) => {
+  const handleRightClick = (event: React.MouseEvent, item: Inv | null) => {
     if (!item) return; // If no item, return early
     event.preventDefault(); // Prevent default context menu
     setContextMenu({
@@ -49,16 +48,45 @@ const Inventory: React.FC<InventoryProps> = ({ Inventory, maxSlots }) => {
       x: event.pageX,
       y: event.pageY,
     });
-    setSelectedItem(item.name);
+    setSelectedItem(item);
+    console.log(item.item_name, " has been right-clicked");
+  };
+
+  const handleDoubleClick = (item: Inv | null) => {
+    if (item) {
+      console.log("Double-clicked item:", item.item_name);
+      setSelectedItem(item);
+      fetchNui("Inventory:UseItem", item);
+    }
   };
 
   const handleContextMenuClose = () => {
     setContextMenu({ ...contextMenu, visible: false });
   };
 
+  const handleMouseDown = (item: Inv) => {
+    setSelectedItem(item);
+  };
+
+  const handleMouseUp = (slot: number) => {
+    if (selectedItem) {
+      fetchNui("Inventory:MoveItem", { item: selectedItem, slot });
+      setInv((prevInv) =>
+        prevInv.map((item) =>
+          item.slot === selectedItem.slot
+            ? { ...item, slot }
+            : item.slot === slot
+            ? { ...item, slot: selectedItem.slot }
+            : item
+        )
+      );
+      setSelectedItem(null);
+    }
+  };
+
   return (
     <>
-      <div onClick={handleContextMenuClose}>
+      <div onClick={handleContextMenuClose} className="select-none">
         <div
           className="absolute left-[-19%] top-[21.5%] w-[50%] overflow-y-auto"
           style={{
@@ -88,7 +116,10 @@ const Inventory: React.FC<InventoryProps> = ({ Inventory, maxSlots }) => {
                 <div
                   key={slot}
                   className="h-20 m-0 border-2 border-gray-500 flex items-center justify-center relative"
-                  onContextMenu={(e) => handleRightClick(e, item)}
+                  onContextMenu={(e) => handleRightClick(e, item || null)}
+                  onDoubleClick={() => handleDoubleClick(item || null)}
+                  onMouseDown={() => item && handleMouseDown(item)}
+                  onMouseUp={() => handleMouseUp(slot)}
                 >
                   {item ? (
                     <div
@@ -126,16 +157,7 @@ const Inventory: React.FC<InventoryProps> = ({ Inventory, maxSlots }) => {
               <button
                 className="hover:bg-gray-300 p-[4px]"
                 onClick={() => {
-                  console.log("clicked!", selectedItem?.item_name);
-                }}
-              >
-                Use
-              </button>
-              <br />
-              <button
-                className="hover:bg-gray-300 p-[4px]"
-                onClick={() => {
-                  console.log("Dropped item");
+                  console.log("Dropped item", selectedItem?.item_name);
                   setContextMenu({ ...contextMenu, visible: false });
                 }}
               >
