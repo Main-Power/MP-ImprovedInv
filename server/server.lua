@@ -45,7 +45,6 @@ AddEventHandler(
       {["@steamid"] = steamid},
       function(result)
         if #result > 0 then
-          --print("Result found for " .. steamid)
           --print("result:" .. json.encode(result))
 
           -- Iterate over each row in the result
@@ -59,9 +58,11 @@ AddEventHandler(
                   table.insert(
                     items,
                     {
-                      title = item.title,
-                      description = "Weight: " .. item.weight .. "lbs,\nAmount: " .. item.amount,
-                      disabled = not item.usable
+                      item_name = item.name,
+                      item_title = item.title,
+                      item_weight = item.weight,
+                      item_amount = item.amount,
+                      can_use = not item.usable
                     }
                   )
                 end
@@ -75,16 +76,7 @@ AddEventHandler(
 
           -- Check if items were successfully extracted
           if #items == 0 then
-            print("No inventory found for " .. steamid)
-            -- Set items table to indicate inventory is empty
-            table.insert(
-              items,
-              {
-                title = "Inventory is empty",
-                description = "",
-                disabled = true
-              }
-            )
+            return print("No inventory found for " .. steamid)
           end
           TriggerClientEvent("inventory:open", _source, items)
         else

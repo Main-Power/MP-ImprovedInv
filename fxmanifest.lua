@@ -2,7 +2,7 @@ fx_version "cerulean"
 lua54 "yes"
 games {"gta5"}
 
-ui_page "web/build/index.html"
+ui_page "build/index.html"
 lua54 "yes"
 
 shared_scripts {
@@ -20,6 +20,6 @@ client_script {
 }
 
 files {
-  "web/build/index.html",
-  "web/build/**/*"
+  "build/index.html",
+  "build/**/*"
 }

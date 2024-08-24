@@ -9,41 +9,29 @@ AddEventHandler(
 -- SendReactMessage(action, data)
 
 -- open inventory command (temporary).
-local invOpen = false
 RegisterCommand(
   "inv",
   function()
-    --TriggerServerEvent("inventory:open")
-    SendReactMessage("setVisible", not invOpen)
-    SendReactMessage("showInventory", not invOpen)
-    invOpen = not invOpen
+    TriggerServerEvent("inventory:open")
   end
 )
--- open inventory event.
 RegisterNetEvent(
   "inventory:open",
   function(items)
-    local items2 = {}
-    for k, v in pairs(items) do
-      --print(v.title, v.description, v.disabled)
+    local inventory = {}
+    for _, item in ipairs(items) do
       table.insert(
-        items2,
+        inventory,
         {
-          title = v.title,
-          description = v.description,
-          disabled = v.disabled
+          item_name = item.item_name,
+          item_title = item.item_title,
+          item_weight = item.item_weight,
+          item_amount = item.item_amount,
+          item_usable = item.can_use
         }
       )
     end
-    --print("items2", json.encode(items2))
-
-    lib.registerContext(
-      {
-        id = "main_menui",
-        title = "Your Inventory",
-        options = items2
-      }
-    )
-    lib.showContext("main_menui")
+    toggleNuiFrame(true)
+    SendReactMessage("showInventory", {show = true, inv = inventory, maxSlots = cfg.maxSlots})
   end
 )
