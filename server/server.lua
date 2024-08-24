@@ -1,12 +1,3 @@
--- Version check
-local version = 1.0
-local resourceVersion = lib.versionCheck("overextended/ox_lib")
-if resourceVersion == version then
-  print("^2[INFO]^7: ox_inventory is up to date.")
-else
-  print("^1[ERROR]^7: ox_inventory is outdated. Please update it from https://github.com/MainPower/inventory")
-end
-
 AddEventHandler(
   "onResourceStart",
   function()

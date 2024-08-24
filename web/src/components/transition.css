@@ -1,0 +1,22 @@
+/* transition.css */
+.fade-swipe-enter {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fade-swipe-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.fade-swipe-exit {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fade-swipe-exit-active {
+  opacity: 0;
+  transform: translateX(100%);
+}

@@ -9,10 +9,14 @@ AddEventHandler(
 -- SendReactMessage(action, data)
 
 -- open inventory command (temporary).
+local invOpen = false
 RegisterCommand(
   "inv",
   function()
-    TriggerServerEvent("inventory:open")
+    --TriggerServerEvent("inventory:open")
+    SendReactMessage("setVisible", not invOpen)
+    SendReactMessage("showInventory", not invOpen)
+    invOpen = not invOpen
   end
 )
 -- open inventory event.
@@ -21,7 +25,7 @@ RegisterNetEvent(
   function(items)
     local items2 = {}
     for k, v in pairs(items) do
-      print(v.title, v.description, v.disabled)
+      --print(v.title, v.description, v.disabled)
       table.insert(
         items2,
         {
@@ -31,7 +35,7 @@ RegisterNetEvent(
         }
       )
     end
-    print("items2", json.encode(items2))
+    --print("items2", json.encode(items2))
 
     lib.registerContext(
       {
