@@ -2,7 +2,7 @@ AddEventHandler(
   "onResourceStart",
   function()
     if cfg.debug then
-      print("^2[DEBUG]:^7 Script has started successfully.")
+      --print("^2[DEBUG]:^7 Script has started successfully.")
     else
       return
     end
@@ -22,9 +22,9 @@ AddEventHandler(
       {},
       function(result)
         if result then
-          print("^2[Inventory]: ^7Table created successfully.")
+          --print("^2[Inventory]: ^7Table created successfully.")
         else
-          print("^1[Inventory]: ^7Failed to create table or table already exists.")
+          --print("^1[Inventory]: ^7Failed to create table or table already exists.")
         end
       end
     )
@@ -66,25 +66,25 @@ AddEventHandler(
                   )
                 end
               else
-                print("Failed to decode JSON data for " .. steamid)
+                --print("Failed to decode JSON data for " .. steamid)
               end
             else
-              print("Data field is nil for " .. steamid)
+              --print("Data field is nil for " .. steamid)
             end
           end
 
           -- Check if items were successfully extracted
           if #items == 0 then
             TriggerClientEvent("inventory:open", _source, items)
-            return print("No inventory found for " .. steamid)
+            return --print("No inventory found for " .. steamid)
           end
 
-          -- Debugging statement to print all items
-          print("Items extracted for " .. steamid .. ": " .. json.encode(items))
+          -- Debugging statement to --print all items
+          --print("Items extracted for " .. steamid .. ": " .. json.encode(items))
 
           TriggerClientEvent("inventory:open", _source, items)
         else
-          print("No inventory found for " .. steamid)
+          --print("No inventory found for " .. steamid)
         end
       end
     )
@@ -142,6 +142,19 @@ exports(
                 if item.name == itemName then
                   item.amount = item.amount + amount
                   itemFound = true
+                  -- Trigger the inventory:refresh event with the updated item details
+                  TriggerClientEvent(
+                    "inventory:addItem",
+                    target,
+                    {
+                      name = item.name,
+                      title = item.title,
+                      weight = item.weight,
+                      amount = item.amount,
+                      can_use = not item.usable,
+                      slot = item.slot
+                    }
+                  )
                   break
                 end
               end
@@ -164,6 +177,19 @@ exports(
 
                 -- Append the new item data
                 table.insert(inventory, itemData)
+
+                -- Trigger the inventory:refresh event with the new item details
+                TriggerClientEvent(
+                  "inventory:refresh",
+                  target,
+                  {
+                    name = itemData.name,
+                    title = itemData.title,
+                    weight = itemData.weight,
+                    amount = itemData.amount,
+                    slot = itemData.slot
+                  }
+                )
               end
 
               -- Convert the updated inventory back to JSON
@@ -175,22 +201,22 @@ exports(
                 {["@steamid"] = targetSteamid, ["@updatedData"] = updatedDataJson},
                 function(updateResult)
                   if updateResult.affectedRows > 0 then
-                    print("Item added to inventory for " .. targetSteamid)
+                    --print("Item added to inventory for " .. targetSteamid)
                   else
-                    print("Failed to update inventory for " .. targetSteamid)
+                    --print("Failed to update inventory for " .. targetSteamid)
                   end
                 end
               )
             else
-              print("No inventory found for " .. targetSteamid)
+              --print("No inventory found for " .. targetSteamid)
             end
           end
         )
       else
-        print("Failed to encode item data to JSON")
+        --print("Failed to encode item data to JSON")
       end
     else
-      print("Item " .. itemName .. " doesn't exist")
+      --print("Item " .. itemName .. " doesn't exist")
     end
   end
 )
@@ -228,10 +254,18 @@ exports(
           -- Decode the existing data
           local inventory = json.decode(data)
           local itemFound = false
+          local itemDetails = nil
 
           -- Check if the item already exists in the inventory
           for i, item in ipairs(inventory) do
             if item.name == itemName then
+              itemDetails = {
+                item_name = item.name,
+                item_title = item.title,
+                item_weight = item.weight,
+                item_amount = item.amount,
+                item_slot = item.slot
+              }
               if item.amount > amount then
                 item.amount = item.amount - amount
               else
@@ -243,6 +277,9 @@ exports(
           end
 
           if itemFound then
+            -- Send item details to the client before removing it
+            TriggerClientEvent("inventory:removeItem", target, itemDetails)
+
             -- Convert the updated inventory back to JSON
             local updatedDataJson = json.encode(inventory)
 
@@ -252,17 +289,17 @@ exports(
               {["@steamid"] = targetSteamid, ["@updatedData"] = updatedDataJson},
               function(updateResult)
                 if updateResult.affectedRows > 0 then
-                  print("Item removed from inventory for " .. targetSteamid)
+                  --print("Item removed from inventory for " .. targetSteamid)
                 else
-                  print("Failed to update inventory for " .. targetSteamid)
+                  --print("^1[ERROR]:^7 Failed to update inventory for " .. targetSteamid)
                 end
               end
             )
           else
-            print("Item " .. itemName .. " not found in inventory for " .. targetSteamid)
+            --print("^1[ERROR]:^7 Item " .. itemName .. " not found in inventory for " .. targetSteamid)
           end
         else
-          print("No inventory found for " .. targetSteamid)
+          --print("^1[ERROR]:^7 No inventory found for " .. targetSteamid)
         end
       end
     )
@@ -287,7 +324,7 @@ RegisterNetEvent(
   function(item, newslot)
     local source = source
     local steamid = GetPlayerIdentifierByType(source, "steam")
-    print("Moving item:", item, "to slot:", newslot, "for player:", steamid) -- Debugging statement
+    --print("Moving item:", item, "to slot:", newslot, "for player:", steamid) -- Debugging statement
     exports.oxmysql:execute(
       "SELECT data FROM mp_inventory WHERE owner = @steamid",
       {["@steamid"] = steamid},
@@ -308,7 +345,7 @@ RegisterNetEvent(
           if string.find(inventoryStr, item) then
             for i, invItem in ipairs(inventory) do
               if invItem.name == item then
-                print("Item found:", item, "current slot:", invItem.slot) -- Debugging statement
+                --print("Item found:", item, "current slot:", invItem.slot) -- Debugging statement
                 invItem.slot = newslot
                 itemFound = true
                 break
@@ -319,7 +356,7 @@ RegisterNetEvent(
           if itemFound then
             -- Convert the updated inventory back to JSON
             local updatedDataJson = json.encode(inventory)
-            print("Updated inventory JSON:", updatedDataJson) -- Debugging statement
+            --print("Updated inventory JSON:", updatedDataJson) -- Debugging statement
 
             -- Update the inventory in the database
             exports.oxmysql:execute(
@@ -327,17 +364,17 @@ RegisterNetEvent(
               {["@steamid"] = steamid, ["@updatedData"] = updatedDataJson},
               function(updateResult)
                 if updateResult.affectedRows > 0 then
-                  print("Item moved in inventory for " .. steamid)
+                  --print("Item moved in inventory for " .. steamid)
                 else
-                  print("Failed to update inventory for " .. steamid)
+                  --print("Failed to update inventory for " .. steamid)
                 end
               end
             )
           else
-            print("Item " .. item .. " not found in inventory for " .. steamid)
+            --print("Item " .. item .. " not found in inventory for " .. steamid)
           end
         else
-          print("No inventory found for " .. steamid)
+          --print("No inventory found for " .. steamid)
         end
       end
     )

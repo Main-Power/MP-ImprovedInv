@@ -1,6 +1,6 @@
 -- Example inventory data structure
 local inventory = {}
-
+local resource = GetCurrentResourceName()
 -- closes the inventory when resource stops.
 AddEventHandler(
   "onResourceStop",
@@ -12,10 +12,12 @@ AddEventHandler(
 -- SendReactMessage(action, data)
 
 -- open inventory command (temporary).
+local showInventory = false
 RegisterCommand(
   "inv",
   function()
     TriggerServerEvent("inventory:open")
+    showInventory = true
   end
 )
 
@@ -37,12 +39,21 @@ RegisterNetEvent(
       )
     end
     toggleNuiFrame(true)
-    SendReactMessage("showInventory", {show = true, inv = inventory, maxSlots = cfg.maxSlots})
+    SendReactMessage("showInventory", {inv = inventory, maxSlots = cfg.maxSlots})
     inventory = {}
   end
 )
-
 RegisterNUICallback(
+  "hideFrame",
+  function(_, cb)
+    toggleNuiFrame(false)
+    showInventory = false
+    cb({})
+  end
+)
+
+RegisterNetEvent("UseItem")
+AddEventHandler(
   "Inventory:UseItem",
   function(data)
     if not data.can_use then
@@ -53,6 +64,13 @@ RegisterNUICallback(
     else
       print("Used item: " .. data.item_name)
     end
+  end
+)
+
+RegisterNUICallback(
+  "Inventory:UseItem",
+  function(data)
+    TriggerEvent("Inventory:UseItem", data)
   end
 )
 
@@ -79,6 +97,60 @@ RegisterNUICallback(
     else
       print("Invalid data received")
       cb("error")
+    end
+  end
+)
+
+RegisterNetEvent(
+  "inventory:addItem",
+  function(inv)
+    -- Debugging: Log the received inv
+    print("Received inventory: " .. json.encode(inv))
+    table.insert(
+      inventory,
+      {
+        item_name = inv.item_name,
+        item_title = inv.item_title,
+        item_weight = inv.item_weight,
+        item_amount = inv.item_amount,
+        item_usable = inv.can_use,
+        slot = inv.slot
+      }
+    )
+    SendReactMessage("addItem", {inv = inventory, maxSlots = cfg.maxSlots, isShown = showInventory})
+    inventory = {}
+  end
+)
+
+RegisterNetEvent(
+  "inventory:removeItem",
+  function(inv)
+    -- Debugging: Log the received inv
+    print("Received inventory: " .. json.encode(inv))
+    table.insert(
+      inventory,
+      {
+        item_name = inv.item_name,
+        item_title = inv.item_title,
+        item_weight = inv.item_weight,
+        item_amount = inv.item_amount,
+        item_usable = inv.can_use,
+        slot = inv.slot
+      }
+    )
+    SendReactMessage("removeItem", {inv = inventory, maxSlots = cfg.maxSlots, isShown = showInventory})
+    inventory = {}
+  end
+)
+
+RegisterNUICallback(
+  "refreshInv",
+  function(data)
+    if data.isShown then
+      TriggerServerEvent("inventory:open")
+      print("testing.")
+    else
+      print("Inventory is not shown")
     end
   end
 )

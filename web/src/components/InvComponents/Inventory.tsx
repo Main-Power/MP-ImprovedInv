@@ -34,7 +34,7 @@ const Inventory: React.FC<InventoryProps> = ({ Inventory, maxSlots }) => {
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    //console.log("Inventory updated:", JSON.stringify(Inventory));
+    console.log("Inventory updated:", JSON.stringify(Inventory));
     if (Array.isArray(Inventory)) {
       setInv(Inventory);
     } else {

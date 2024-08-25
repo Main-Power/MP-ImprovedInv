@@ -23,28 +23,19 @@ interface Inv {
 const App: React.FC = () => {
   const [showInventory, setShowInventory] = useState(true);
   const [InvTransition, setInvTransition] = useState("");
-  const [inv, setInv] = React.useState<Inv[]>([
-    /*{
-      name: "bread",
-      item_name: "Bread",
-      item_weight: "0.5",
-      item_amount: "1",
-      slot: 1,
-      can_use: "true",
-      image: "/images/bread.png",
-    },*/
-  ]);
+  const [inv, setInv] = React.useState<Inv[]>([]);
   const [maxSlots, setMaxSlots] = React.useState(30);
 
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = async (event: MessageEvent) => {
       const { action, data } = event.data;
+      const imagePath = "/public/images/";
+      const imageExtension = ".png";
+
       if (action === "showInventory") {
         setInv([]);
         setShowInventory(data);
-        const Inv = data.inv;
-        const imagePath = "/public/images/";
-        const imageExtension = ".png";
+        const Inv = data.inv || []; // Ensure Inv is an array
         const newItems = Inv.map((item: any, index: number) => {
           const name = item.item_name;
           const slot = item.slot || index + 1; // Use logical OR instead of bitwise OR
@@ -62,6 +53,35 @@ const App: React.FC = () => {
         });
         setInv((prev) => [...prev, ...newItems]);
         setMaxSlots(data.maxSlots);
+      } else if (action === "addItem") {
+        const inv = data.inv;
+        const name = inv.item_name;
+        const slot = inv.slot || inv.length + 1; // Use logical OR instead of bitwise OR
+        const weight = inv.item_weight;
+        const image = `${imagePath}${name}${imageExtension}`;
+        const newItem = {
+          name,
+          item_name: inv.item_title || "",
+          item_weight: weight,
+          item_amount: inv.item_amount,
+          slot,
+          can_use: inv.can_use || true,
+          image,
+        };
+        setInv((prev) => [...prev, newItem]);
+        console.log("sending refresh event now...");
+        await fetchNui("refreshInv", data);
+      } else if (action === "removeItem") {
+        const inv = data.inv;
+        console.log(JSON.stringify(inv));
+        const name = inv.item_name;
+        const slot = inv.slot;
+        const newInv = inv.filter(
+          (item: any) => !(item.name === name && item.slot === slot)
+        );
+        setInv(newInv);
+        console.log("sending refresh event now...");
+        await fetchNui("refreshInv", data);
       }
     };
 
@@ -69,9 +89,6 @@ const App: React.FC = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  useEffect(() => {
-    //console.log("Inv updated:", JSON.stringify(inv));
-  }, [inv]);
   useEffect(() => {
     if (showInventory) {
       setInvTransition("fade-swipe-enter");
