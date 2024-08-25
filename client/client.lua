@@ -25,7 +25,7 @@ RegisterNetEvent(
   "inventory:open",
   function(items)
     for _, item in ipairs(items) do
-      print("\n" .. item.item_name, item.item_title, item.item_weight, item.item_amount, item.can_use, item.slot)
+      --print("\n" .. item.item_name, item.item_title, item.item_weight, item.item_amount, item.can_use, item.slot)
       table.insert(
         inventory,
         {
@@ -57,12 +57,12 @@ AddEventHandler(
   "Inventory:UseItem",
   function(data)
     if not data.can_use then
-      return print(data.item_name .. " cannot be used.")
+      return --print(data.item_name .. " cannot be used.")
     end
     if string.sub(data.name, 1, 7) == "weapon_" then
-      print("Weapon used. " .. data.item_name)
+      --print("Weapon used. " .. data.item_name)
     else
-      print("Used item: " .. data.item_name)
+      --print("Used item: " .. data.item_name)
     end
   end
 )
@@ -91,11 +91,11 @@ RegisterNUICallback(
     if type(data) == "table" and data.item and data.slot then
       local item = data.item
       local slot = data.slot
-      print("Item: " .. tostring(item.name) .. ", Slot: " .. tostring(slot))
+      --print("Item: " .. tostring(item.name) .. ", Slot: " .. tostring(slot))
       TriggerServerEvent("inventory:moveItem", item.name, slot)
       cb("ok")
     else
-      print("Invalid data received")
+      --print("Invalid data received")
       cb("error")
     end
   end
@@ -105,7 +105,7 @@ RegisterNetEvent(
   "inventory:addItem",
   function(inv)
     -- Debugging: Log the received inv
-    print("Received inventory: " .. json.encode(inv))
+    --print("Received inventory: " .. json.encode(inv))
     table.insert(
       inventory,
       {
@@ -126,7 +126,7 @@ RegisterNetEvent(
   "inventory:removeItem",
   function(inv)
     -- Debugging: Log the received inv
-    print("Received inventory: " .. json.encode(inv))
+    --print("Received inventory: " .. json.encode(inv))
     table.insert(
       inventory,
       {
@@ -147,10 +147,10 @@ RegisterNUICallback(
   "refreshInv",
   function(data)
     if data.isShown then
+      --print("testing.")
       TriggerServerEvent("inventory:open")
-      print("testing.")
     else
-      print("Inventory is not shown")
+      --print("Inventory is not shown")
     end
   end
 )

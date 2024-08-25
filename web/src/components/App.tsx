@@ -56,31 +56,31 @@ const App: React.FC = () => {
       } else if (action === "addItem") {
         const inv = data.inv;
         const name = inv.item_name;
-        const slot = inv.slot || inv.length + 1; // Use logical OR instead of bitwise OR
+        const slot = inv.slot;
         const weight = inv.item_weight;
         const image = `${imagePath}${name}${imageExtension}`;
         const newItem = {
           name,
-          item_name: inv.item_title || "",
+          item_name: inv.item_title,
           item_weight: weight,
           item_amount: inv.item_amount,
           slot,
-          can_use: inv.can_use || true,
+          can_use: inv.can_use,
           image,
         };
         setInv((prev) => [...prev, newItem]);
-        console.log("sending refresh event now...");
+        //console.log("sending refresh event now...");
         await fetchNui("refreshInv", data);
       } else if (action === "removeItem") {
         const inv = data.inv;
-        console.log(JSON.stringify(inv));
+        //console.log(JSON.stringify(inv));
         const name = inv.item_name;
         const slot = inv.slot;
         const newInv = inv.filter(
           (item: any) => !(item.name === name && item.slot === slot)
         );
         setInv(newInv);
-        console.log("sending refresh event now...");
+        //console.log("sending refresh event now...");
         await fetchNui("refreshInv", data);
       }
     };
