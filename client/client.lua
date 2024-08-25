@@ -45,8 +45,11 @@ RegisterNetEvent(
 RegisterNUICallback(
   "Inventory:UseItem",
   function(data)
-    if string.sub(data.item_name, 1, 7) == "weapon_" then
-      print("Weapon used.")
+    if not data.can_use then
+      return print(data.item_name .. " cannot be used.")
+    end
+    if string.sub(data.name, 1, 7) == "weapon_" then
+      print("Weapon used. " .. data.item_name)
     else
       print("Used item: " .. data.item_name)
     end
